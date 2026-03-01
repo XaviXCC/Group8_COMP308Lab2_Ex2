@@ -6,13 +6,27 @@ const connectDB = require('./config/database');
 const typeDefs = require('./graphql/schema');
 const resolvers = require('./graphql/resolvers');
 const authMiddleware = require('./middleware/auth');
+const uploadRoutes = require('./routes/upload');
 const config = require('./config/config');
 const seedDatabase = require('./seed');
 
 const app = express();
 
-// 设置静态文件服务
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
+// Serve static files
+app.use('/images', express.static(path.join(__dirname, 'public/images'), {
+    maxAge: '1d',
+    etag: true,
+    lastModified: true
+}));
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(authMiddleware);
+
+// Upload routes - make sure this is before Apollo Server
+app.use('/api/upload', uploadRoutes);
 
 const startServer = async () => {
     try {

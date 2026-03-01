@@ -8,69 +8,55 @@ module.exports = {
         me: async (_, __, { user }) => {
             if (!user) throw new AuthenticationError('Not authenticated');
             const player = await Player.findById(user.id).populate('favoriteGames');
-            // return player with string ID and populated favorite games
-            if (player) {
-                player.id = player._id.toString();
-            }
-            return player;
-        },
-        getPlayer: async (_, { id }, { user }) => {
-            if (!user) throw new AuthenticationError('Not authenticated');
-            const player = await Player.findById(id).populate('favoriteGames');
-            if (player) {
-                player.id = player._id.toString();
-            }
-            return player;
-        },
-        getFavoriteGames: async (_, __, { user }) => {
-            if (!user) throw new AuthenticationError('Not authenticated');
-            const player = await Player.findById(user.id).populate('favoriteGames');
-            // return favorite games with string IDs
-            return player.favoriteGames.map(game => {
-                game.id = game._id.toString();
-                return game;
-            });
-        }
-    },
-    Mutation: {
-        login: async (_, { input }) => {
-            const { email, password } = input;
+            if (!player) throw new UserInputError('Player not found');
 
-            const player = await Player.findOne({ email }).populate('favoriteGames');
-            if (!player) {
-                throw new AuthenticationError('Invalid credentials');
-            }
-
-            const isValid = await player.comparePassword(password);
-            if (!isValid) {
-                throw new AuthenticationError('Invalid credentials');
-            }
-
-            // return player with string ID and populated favorite games
+            // Convert MongoDB _id to string id
             const playerObj = player.toObject();
             playerObj.id = player._id.toString();
 
-            const token = generateToken({
-                id: playerObj.id,
-                username: playerObj.username,
-                email: playerObj.email
-            });
+            // Convert favorite games _id to string id
+            playerObj.favoriteGames = playerObj.favoriteGames.map(game => ({
+                ...game,
+                id: game._id ? game._id.toString() : game.id
+            }));
 
-            return {
-                token,
-                player: {
-                    ...playerObj,
-                    favoriteGames: playerObj.favoriteGames.map(game => ({
-                        ...game,
-                        id: game._id.toString()
-                    }))
-                }
-            };
+            return playerObj;
         },
 
+        getPlayer: async (_, { id }, { user }) => {
+            if (!user) throw new AuthenticationError('Not authenticated');
+            const player = await Player.findById(id).populate('favoriteGames');
+            if (!player) throw new UserInputError('Player not found');
+
+            const playerObj = player.toObject();
+            playerObj.id = player._id.toString();
+            playerObj.favoriteGames = playerObj.favoriteGames.map(game => ({
+                ...game,
+                id: game._id ? game._id.toString() : game.id
+            }));
+
+            return playerObj;
+        },
+
+        getFavoriteGames: async (_, __, { user }) => {
+            if (!user) throw new AuthenticationError('Not authenticated');
+            const player = await Player.findById(user.id).populate('favoriteGames');
+            if (!player) throw new UserInputError('Player not found');
+
+            // Return favorite games with string ids
+            return player.favoriteGames.map(game => {
+                const gameObj = game.toObject();
+                gameObj.id = game._id.toString();
+                return gameObj;
+            });
+        }
+    },
+
+    Mutation: {
         register: async (_, { input }) => {
             const { username, email, password } = input;
 
+            // Check if player already exists
             const existingPlayer = await Player.findOne({
                 $or: [{ email }, { username }]
             });
@@ -79,6 +65,7 @@ module.exports = {
                 throw new UserInputError('Player already exists with this email or username');
             }
 
+            // Create new player
             const player = new Player({
                 username,
                 email,
@@ -87,9 +74,12 @@ module.exports = {
 
             await player.save();
 
+            // Format the response
             const playerObj = player.toObject();
             playerObj.id = player._id.toString();
+            playerObj.favoriteGames = [];
 
+            // Generate JWT token
             const token = generateToken({
                 id: playerObj.id,
                 username: playerObj.username,
@@ -98,10 +88,45 @@ module.exports = {
 
             return {
                 token,
-                player: {
-                    ...playerObj,
-                    favoriteGames: []
-                }
+                player: playerObj
+            };
+        },
+
+        login: async (_, { input }) => {
+            const { email, password } = input;
+
+            // Find player by email
+            const player = await Player.findOne({ email }).populate('favoriteGames');
+            if (!player) {
+                throw new AuthenticationError('Invalid credentials');
+            }
+
+            // Check password
+            const isValid = await player.comparePassword(password);
+            if (!isValid) {
+                throw new AuthenticationError('Invalid credentials');
+            }
+
+            // Format the response
+            const playerObj = player.toObject();
+            playerObj.id = player._id.toString();
+
+            // Convert favorite games ids to strings
+            playerObj.favoriteGames = playerObj.favoriteGames.map(game => ({
+                ...game,
+                id: game._id ? game._id.toString() : game.id
+            }));
+
+            // Generate JWT token
+            const token = generateToken({
+                id: playerObj.id,
+                username: playerObj.username,
+                email: playerObj.email
+            });
+
+            return {
+                token,
+                player: playerObj
             };
         },
 
@@ -113,6 +138,7 @@ module.exports = {
                 throw new UserInputError('Player not found');
             }
 
+            // Handle password change
             if (input.currentPassword && input.newPassword) {
                 const isValid = await player.comparePassword(input.currentPassword);
                 if (!isValid) {
@@ -121,75 +147,96 @@ module.exports = {
                 player.password = input.newPassword;
             }
 
+            // Update other fields
             if (input.username) player.username = input.username;
             if (input.email) player.email = input.email;
             if (input.avatarImage) player.avatarImage = input.avatarImage;
 
             await player.save();
 
+            // Return updated player with populated favorite games
             const updatedPlayer = await Player.findById(player.id).populate('favoriteGames');
             const playerObj = updatedPlayer.toObject();
             playerObj.id = updatedPlayer._id.toString();
 
-            return {
-                ...playerObj,
-                favoriteGames: playerObj.favoriteGames.map(game => ({
-                    ...game,
-                    id: game._id.toString()
-                }))
-            };
+            // Convert favorite games ids to strings
+            playerObj.favoriteGames = playerObj.favoriteGames.map(game => ({
+                ...game,
+                id: game._id ? game._id.toString() : game.id
+            }));
+
+            return playerObj;
         },
 
         addFavoriteGame: async (_, { gameId }, { user }) => {
             if (!user) throw new AuthenticationError('Not authenticated');
 
+            // Find the player
             const player = await Player.findById(user.id);
-            const game = await Game.findById(gameId);
+            if (!player) {
+                throw new UserInputError('Player not found');
+            }
 
+            // Find the game
+            const game = await Game.findById(gameId);
             if (!game) {
                 throw new UserInputError('Game not found');
             }
 
+            // Check if game is already in favorites
             if (!player.favoriteGames.includes(gameId)) {
                 player.favoriteGames.push(gameId);
                 await player.save();
             }
 
+            // Return updated player with populated favorite games
             const updatedPlayer = await Player.findById(player.id).populate('favoriteGames');
             const playerObj = updatedPlayer.toObject();
             playerObj.id = updatedPlayer._id.toString();
 
-            return {
-                ...playerObj,
-                favoriteGames: playerObj.favoriteGames.map(game => ({
+            // Safely convert favorite games ids to strings
+            playerObj.favoriteGames = (playerObj.favoriteGames || []).map(game => {
+                if (!game) return null;
+                return {
                     ...game,
-                    id: game._id.toString()
-                }))
-            };
+                    id: game._id ? game._id.toString() : game.id
+                };
+            }).filter(g => g !== null); // Remove any null entries
+
+            return playerObj;
         },
 
         removeFavoriteGame: async (_, { gameId }, { user }) => {
             if (!user) throw new AuthenticationError('Not authenticated');
 
+            // Find the player
             const player = await Player.findById(user.id);
+            if (!player) {
+                throw new UserInputError('Player not found');
+            }
 
+            // Remove game from favorites
             player.favoriteGames = player.favoriteGames.filter(
                 id => id.toString() !== gameId
             );
 
             await player.save();
 
+            // Return updated player with populated favorite games
             const updatedPlayer = await Player.findById(player.id).populate('favoriteGames');
             const playerObj = updatedPlayer.toObject();
             playerObj.id = updatedPlayer._id.toString();
 
-            return {
-                ...playerObj,
-                favoriteGames: playerObj.favoriteGames.map(game => ({
+            // Safely convert favorite games ids to strings
+            playerObj.favoriteGames = (playerObj.favoriteGames || []).map(game => {
+                if (!game) return null;
+                return {
                     ...game,
-                    id: game._id.toString()
-                }))
-            };
+                    id: game._id ? game._id.toString() : game.id
+                };
+            }).filter(g => g !== null);
+
+            return playerObj;
         }
     }
 };

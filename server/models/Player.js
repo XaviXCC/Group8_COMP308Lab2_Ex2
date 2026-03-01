@@ -23,7 +23,7 @@ const playerSchema = new mongoose.Schema({
     },
     avatarImage: {
         type: String,
-        default: 'default-avatar.png'
+        default: '/images/avatars/default-avatar.png'  // Changed to local path
     },
     favoriteGames: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -52,5 +52,17 @@ playerSchema.pre('save', async function (next) {
 playerSchema.methods.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Ensure _id is converted to id in JSON responses
+playerSchema.set('toJSON', {
+    virtuals: true,
+    transform: (doc, ret) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        delete ret.password;
+        return ret;
+    }
+});
 
 module.exports = mongoose.model('Player', playerSchema);

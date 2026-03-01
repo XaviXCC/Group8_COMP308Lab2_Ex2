@@ -104,6 +104,7 @@ export const GET_ME = gql`
       username
       email
       avatarImage
+      createdAt
       favoriteGames {
         id
         title

@@ -41,4 +41,15 @@ const gameSchema = new mongoose.Schema({
     }
 });
 
+// Ensure _id is converted to id in JSON responses
+gameSchema.set('toJSON', {
+    virtuals: true,
+    transform: (doc, ret) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+    }
+});
+
 module.exports = mongoose.model('Game', gameSchema);
