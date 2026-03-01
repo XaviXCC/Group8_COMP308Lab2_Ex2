@@ -31,7 +31,7 @@ app.use('/api/upload', uploadRoutes);
 const startServer = async () => {
     try {
         await connectDB();
-        console.log('✅ MongoDB connected');
+        console.log('MongoDB connected');
 
         await seedDatabase();
 
@@ -57,12 +57,12 @@ const startServer = async () => {
         server.applyMiddleware({ app, path: '/graphql' });
 
         app.listen(config.port, () => {
-            console.log(`🚀 Server running on port ${config.port}`);
-            console.log(`📊 GraphQL endpoint: http://localhost:${config.port}${server.graphqlPath}`);
-            console.log(`🖼️  Image URL: http://localhost:${config.port}/images/games/`);
+            console.log(` Server running on port ${config.port}`);
+            console.log(` GraphQL endpoint: http://localhost:${config.port}${server.graphqlPath}`);
+            console.log(` Image URL: http://localhost:${config.port}/images/games/`);
         });
     } catch (error) {
-        console.error('❌ Failed to start server:', error);
+        console.error('！！！ Failed to start server:', error);
         process.exit(1);
     }
 };

@@ -85,9 +85,9 @@ const seedDatabase = async () => {
 
         if (gameCount === 0) {
             await Game.insertMany(seedGames);
-            console.log(`✅ Seeded ${seedGames.length} games successfully`);
+            console.log(` Seeded ${seedGames.length} games successfully`);
         } else {
-            console.log(`⚠️ Database already has ${gameCount} games, skipping seed`);
+            console.log(` !Database already has ${gameCount} games, skipping seed`);
         }
 
         // check if test user already exists to prevent duplicate seeding
@@ -100,10 +100,10 @@ const seedDatabase = async () => {
                 password: 'password123'
             });
             await testPlayer.save();
-            console.log('✅ Test user created: test@example.com / password123');
+            console.log(' Test user created: test@example.com / password123');
         }
     } catch (error) {
-        console.error('❌ Error seeding database:', error);
+        console.error('!!!Error seeding database:', error);
         throw error;
     }
 };

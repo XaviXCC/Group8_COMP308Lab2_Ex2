@@ -6,7 +6,7 @@ const https = require('https');
 const imagesDir = path.join(__dirname, '../public/images/games');
 if (!fs.existsSync(imagesDir)) {
     fs.mkdirSync(imagesDir, { recursive: true });
-    console.log('✅ Created images directory:', imagesDir);
+    console.log('Created images directory:', imagesDir);
 }
 
 // game images with fallback URLs
@@ -67,7 +67,7 @@ const downloadImage = (url, filepath) => {
                 response.pipe(fileStream);
                 fileStream.on('finish', () => {
                     fileStream.close();
-                    console.log(`✅ Downloaded: ${path.basename(filepath)}`);
+                    console.log(` Downloaded: ${path.basename(filepath)}`);
                     resolve();
                 });
             } else {
@@ -87,19 +87,19 @@ const createPlaceholder = (filepath, text) => {
     </svg>`;
 
     fs.writeFileSync(filepath.replace('.jpg', '.svg'), svgContent);
-    console.log(`✅ Created placeholder for ${path.basename(filepath)}`);
+    console.log(` Created placeholder for ${path.basename(filepath)}`);
 };
 
 // main function to set up images
 const setupImages = async () => {
-    console.log('🖼️  Setting up game images...');
+    console.log('  Setting up game images...');
 
     for (const game of gameImages) {
         const filepath = path.join(imagesDir, game.name);
 
         // if file already exists, skip downloading
         if (fs.existsSync(filepath)) {
-            console.log(`⏭️  ${game.name} already exists, skipping`);
+            console.log(`⏭  ${game.name} already exists, skipping`);
             continue;
         }
 
@@ -107,15 +107,15 @@ const setupImages = async () => {
             // try downloading the image, if it fails use the fallback URL, if that also fails create a placeholder
             await downloadImage(game.url, filepath);
         } catch (error) {
-            console.log(`⚠️  Failed to download ${game.name}, creating placeholder...`);
+            console.log(`！  Failed to download ${game.name}, creating placeholder...`);
             // create placeholder using fallback text (game name without extension)
             const text = game.name.replace('.jpg', '').replace(/-/g, ' ');
             createPlaceholder(filepath, text);
         }
     }
 
-    console.log('✅ Image setup complete!');
-    console.log('📁 Images location:', imagesDir);
+    console.log(' Image setup complete!');
+    console.log(' Images location:', imagesDir);
 };
 
 // auto-run the setup when this script is executed
