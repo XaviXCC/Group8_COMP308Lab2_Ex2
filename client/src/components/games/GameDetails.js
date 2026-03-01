@@ -45,16 +45,16 @@ const GameDetails = () => {
                 return game.coverImage;
             }
             // get image from server
-            return `http://localhost:5000${game.coverImage}`;
+            return `http://localhost:4000${game.coverImage}`;
         }
 
         // 2. return corresponding local image based on game title
         if (titleToImage[game.title]) {
-            return `http://localhost:5000${titleToImage[game.title]}`;
+            return `http://localhost:4000${titleToImage[game.title]}`;
         }
 
         // 3. use default image
-        return 'http://localhost:5000/images/games/default-game.jpg';
+        return 'http://localhost:4000/images/games/default-game.jpg';
     };
 
     // deal with broken image links by replacing them with a text placeholder that shows the first letter of the game title

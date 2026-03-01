@@ -118,9 +118,9 @@ const Profile = () => {
         if (previewUrl) return previewUrl;
         if (data?.me?.avatarImage) {
             // Add timestamp to prevent caching issues
-            return `http://localhost:5000${data.me.avatarImage}?t=${Date.now()}`;
+            return `http://localhost:4000${data.me.avatarImage}?t=${Date.now()}`;
         }
-        return 'http://localhost:5000/images/avatars/default-avatar.png';
+        return 'http://localhost:4000/images/avatars/default-avatar.png';
     }, [data?.me?.avatarImage, previewUrl]);
 
     // Handle avatar upload
@@ -134,7 +134,7 @@ const Profile = () => {
             setUploading(true);
             const token = localStorage.getItem('token');
 
-            const response = await fetch('http://localhost:5000/api/upload/avatar', {
+            const response = await fetch('http://localhost:4000/api/upload/avatar', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -328,7 +328,7 @@ const Profile = () => {
                         {/* Avatar Upload Section */}
                         <div className="text-center mb-4">
                             <img
-                                src={previewUrl || `http://localhost:5000${player?.avatarImage || '/images/avatars/default-avatar.png'}`}
+                                src={previewUrl || `http://localhost:4000${player?.avatarImage || '/images/avatars/default-avatar.png'}`}
                                 alt="Avatar Preview"
                                 style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover' }}
                                 className="border border-3 border-primary mb-3"

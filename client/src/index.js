@@ -8,7 +8,7 @@ import './index.css';
 
 // 创建 HTTP 连接
 const httpLink = createHttpLink({
-  uri: 'http://localhost:5000/graphql'  // 确保后端运行在这个地址
+  uri: 'http://localhost:4000/graphql'  // 确保后端运行在这个地址
 });
 
 // 添加认证头
