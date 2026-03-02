@@ -6,12 +6,12 @@ import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 
-// 创建 HTTP 连接
+// create an http link to the GraphQL server
 const httpLink = createHttpLink({
-  uri: 'http://localhost:4000/graphql'  // 确保后端运行在这个地址
+  uri: 'http://localhost:4000/graphql'
 });
 
-// 添加认证头
+// authentication header
 const authLink = setContext((_, { headers }) => {
   const token = localStorage.getItem('token');
   return {
@@ -22,7 +22,7 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
-// 创建 Apollo Client
+// Apollo Client
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
@@ -38,7 +38,7 @@ const client = new ApolloClient({
   }
 });
 
-// 在开发环境下加载错误消息（可选）
+// error messages and dev messages are only loaded in development mode
 if (process.env.NODE_ENV === 'development') {
   import('@apollo/client/dev').then(({ loadDevMessages, loadErrorMessages }) => {
     loadDevMessages();
